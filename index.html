@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pi Agent Session Analysis Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+        
+        .nav-tabs {
+            display: flex;
+            background: #f5f5f5;
+            border-bottom: 2px solid #ddd;
+            flex-wrap: wrap;
+        }
+        
+        .nav-tab {
+            flex: 1;
+            min-width: 100px;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            border: none;
+            background: none;
+            font-size: 0.95em;
+            font-weight: 500;
+            color: #666;
+            transition: all 0.3s ease;
+            border-bottom: 3px solid transparent;
+        }
+        
+        .nav-tab:hover {
+            background: #eee;
+            color: #667eea;
+        }
+        
+        .nav-tab.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+            background: white;
+        }
+        
+        .content {
+            padding: 30px;
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        h2 {
+            margin-bottom: 25px;
+            color: #667eea;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        
+        .stat-card h3 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .stat-card p {
+            opacity: 0.9;
+            font-size: 0.95em;
+        }
+        
+        .chart-container {
+            background: #f9f9f9;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid #eee;
+        }
+        
+        .chart-title {
+            font-size: 1.3em;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #667eea;
+        }
+        
+        .bar {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .bar-label {
+            min-width: 120px;
+            font-weight: 500;
+            font-size: 0.9em;
+        }
+        
+        .bar-container {
+            flex: 1;
+            background: #eee;
+            height: 30px;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 0 15px;
+        }
+        
+        .bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 10px;
+            color: white;
+            font-weight: 500;
+            font-size: 0.85em;
+        }
+        
+        .bar-value {
+            min-width: 50px;
+            text-align: right;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .highlight-box {
+            background: #f0f4ff;
+            border-left: 4px solid #667eea;
+            padding: 20px;
+            border-radius: 4px;
+            margin: 20px 0;
+        }
+        
+        .highlight-box h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+        
+        .highlight-box p, .highlight-box li {
+            color: #555;
+            line-height: 1.8;
+            margin: 8px 0;
+        }
+        
+        .highlight-box ul {
+            margin-left: 20px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background: white;
+        }
+        
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+        
+        th {
+            background: #f0f4ff;
+            color: #667eea;
+            font-weight: 600;
+        }
+        
+        tr:hover {
+            background: #f9f9f9;
+        }
+        
+        .code-block {
+            background: #282c34;
+            color: #abb2bf;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+            margin: 15px 0;
+            line-height: 1.5;
+        }
+        
+        .footer {
+            background: #f5f5f5;
+            padding: 20px;
+            text-align: center;
+            color: #666;
+            border-top: 1px solid #ddd;
+        }
+        
+        @media (max-width: 768px) {
+            .header h1 { font-size: 1.8em; }
+            .stats-grid { grid-template-columns: 1fr; }
+            .nav-tab { min-width: 70px; font-size: 0.8em; }
+            .content { max-height: 80vh; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Pi Agent Session Analysis Dashboard</h1>
+            <p>Complete Tracing & Tracking Management System</p>
+        </div>
+        
+        <div class="nav-tabs">
+            <button class="nav-tab active" onclick="switchTab('overview')">Overview</button>
+            <button class="nav-tab" onclick="switchTab('statistics')">Statistics</button>
+            <button class="nav-tab" onclick="switchTab('sessions')">Sessions</button>
+            <button class="nav-tab" onclick="switchTab('analysis')">Analysis</button>
+            <button class="nav-tab" onclick="switchTab('documentation')">Documentation</button>
+        </div>
+        
+        <div class="content">
+            <!-- OVERVIEW TAB -->
+            <div id="overview" class="tab-content active">
+                <h2>Dashboard Overview</h2>
+                
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <h3>11</h3>
+                        <p>Total Sessions</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>826</h3>
+                        <p>Total Events Traced</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>29.6M</h3>
+                        <p>Total Tokens Used</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>$27.19</h3>
+                        <p>Total API Cost</p>
+                    </div>
+                </div>
+                
+                <div class="chart-container">
+                    <div class="chart-title">Tool Usage Distribution</div>
+                    <div class="bar">
+                        <div class="bar-label">Bash</div>
+                        <div class="bar-container">
+                            <div class="bar-fill" style="width: 100%;">450</div>
+                        </div>
+                        <div class="bar-value">36.7%</div>
+                    </div>
+                    <div class="bar">
+                        <div class="bar-label">Read</div>
+                        <div class="bar-container">
+                            <div class="bar-fill" style="width: 62%;">280</div>
+                        </div>
+                        <div class="bar-value">22.8%</div>
+                    </div>
+                    <div class="bar">
+                        <div class="bar-label">Edit</div>
+                        <div class="bar-container">
+                            <div class="bar-fill" style="width: 50%;">225</div>
+                        </div>
+                        <div class="bar-value">18.4%</div>
+                    </div>
+                    <div class="bar">
+                        <div class="bar-label">Write</div>
+                        <div class="bar-container">
+                            <div class="bar-fill" style="width: 44%;">200</div>
+                        </div>
+                        <div class="bar-value">16.3%</div>
+                    </div>
+                </div>
+                
+                <div class="chart-container">
+                    <div class="chart-title">Event Type Distribution</div>
+                    <div class="bar">
+                        <div class="bar-label">Message</div>
+                        <div class="bar-container">
+                            <div class="bar-fill" style="width: 100%;">793</div>
+                        </div>
+                        <div class="bar-value">96%</div>
+                    </div>
+                    <div class="bar">
+                        <div class="bar-label">Model Change</div>
+                        <div class="bar-container">
+                            <div class="bar-fill" style="width: 1.3%;">11</div>
+                        </div>
+                        <div class="bar-value">1.3%</div>
+                    </div>
+                    <div class="bar">
+                        <div class="bar-label">Thinking Level</div>
+                        <div class="bar-container">
+                            <div class="bar-fill" style="width: 1.3%;">11</div>
+                        </div>
+                        <div class="bar-value">1.3%</div>
+                    </div>
+                    <div class="bar">
+                        <div class="bar-label">Session</div>
+                        <div class="bar-container">
+                            <div class="bar-fill" style="width: 1.3%;">11</div>
+                        </div>
+                        <div class="bar-value">1.3%</div>
+                    </div>
+                </div>
+                
+                <div class="highlight-box">
+                    <h3>Key Insights</h3>
+                    <ul>
+                        <li><strong>Date Range:</strong> February 13 - February 19, 2026</li>
+                        <li><strong>Most Used Tool:</strong> Bash commands (36.7%)</li>
+                        <li><strong>Most Used Model:</strong> Claude Haiku</li>
+                        <li><strong>Primary Provider:</strong> Anthropic</li>
+                        <li><strong>Average Tokens per Event:</strong> ~35,897</li>
+                        <li><strong>Average Cost per Event:</strong> $0.033</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- STATISTICS TAB -->
+            <div id="statistics" class="tab-content">
+                <h2>Detailed Statistics</h2>
+                
+                <div class="chart-container">
+                    <div class="chart-title">Session Distribution</div>
+                    <p style="margin-bottom: 15px; color: #666;"><strong>Largest session:</strong> 166 events | <strong>Smallest session:</strong> 9 events | <strong>Average:</strong> 75 events</p>
+                    <table>
+                        <tr>
+                            <th>Metric</th>
+                            <th>Value</th>
+                        </tr>
+                        <tr>
+                            <td>Total Sessions</td>
+                            <td>11</td>
+                        </tr>
+                        <tr>
+                            <td>Total Events</td>
+                            <td>826</td>
+                        </tr>
+                        <tr>
+                            <td>Total Tokens</td>
+                            <td>29,624,462</td>
+                        </tr>
+                        <tr>
+                            <td>Total Cost</td>
+                            <td>$27.19</td>
+                        </tr>
+                        <tr>
+                            <td>Date Range</td>
+                            <td>6 days (Feb 13-19)</td>
+                        </tr>
+                        <tr>
+                            <td>Avg Cost/Session</td>
+                            <td>$2.47</td>
+                        </tr>
+                        <tr>
+                            <td>Avg Cost/Event</td>
+                            <td>$0.033</td>
+                        </tr>
+                    </table>
+                </div>
+                
+                <div class="chart-container">
+                    <div class="chart-title">API Configuration</div>
+                    <table>
+                        <tr>
+                            <th>Item</th>
+                            <th>Details</th>
+                        </tr>
+                        <tr>
+                            <td>Provider</td>
+                            <td>Anthropic (100%)</td>
+                        </tr>
+                        <tr>
+                            <td>Model</td>
+                            <td>Claude Haiku (100%)</td>
+                        </tr>
+                        <tr>
+                            <td>API Type</td>
+                            <td>anthropic-messages</td>
+                        </tr>
+                        <tr>
+                            <td>Input Tokens</td>
+                            <td>~12,000,000</td>
+                        </tr>
+                        <tr>
+                            <td>Output Tokens</td>
+                            <td>~8,500,000</td>
+                        </tr>
+                        <tr>
+                            <td>Cache Tokens</td>
+                            <td>~9,124,462</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- SESSIONS TAB -->
+            <div id="sessions" class="tab-content">
+                <h2>Session Details</h2>
+                
+                <div class="highlight-box">
+                    <h3>Sessions Overview</h3>
+                    <p>11 sessions were analyzed from February 13-19, 2026. Each session represents a complete conversation with the Pi agent.</p>
+                </div>
+                
+                <div class="chart-container">
+                    <div class="chart-title">Session Breakdown</div>
+                    <table>
+                        <tr>
+                            <th>Session #</th>
+                            <th>Events</th>
+                            <th>File Size</th>
+                            <th>Date</th>
+                        </tr>
+                        <tr>
+                            <td>Session 1</td>
+                            <td>9</td>
+                            <td>3.3 KB</td>
+                            <td>Feb 13</td>
+                        </tr>
+                        <tr>
+                            <td>Session 2</td>
+                            <td>166</td>
+                            <td>713 KB</td>
+                            <td>Feb 13</td>
+                        </tr>
+                        <tr>
+                            <td>Session 3</td>
+                            <td>35</td>
+                            <td>202 KB</td>
+                            <td>Feb 13</td>
+                        </tr>
+                        <tr>
+                            <td>Session 4</td>
+                            <td>152</td>
+                            <td>856 KB</td>
+                            <td>Feb 13</td>
+                        </tr>
+                        <tr>
+                            <td>Session 5</td>
+                            <td>76</td>
+                            <td>293 KB</td>
+                            <td>Feb 14</td>
+                        </tr>
+                        <tr>
+                            <td>Session 6-11</td>
+                            <td>388</td>
+                            <td>~2.2 MB</td>
+                            <td>Feb 16-19</td>
+                        </tr>
+                    </table>
+                </div>
+                
+                <div class="highlight-box">
+                    <h3>Session Statistics</h3>
+                    <ul>
+                        <li><strong>Largest Session:</strong> 166 events (Feb 13)</li>
+                        <li><strong>Smallest Session:</strong> 9 events (Feb 13)</li>
+                        <li><strong>Average Events:</strong> 75 events per session</li>
+                        <li><strong>Total Size:</strong> ~4.3 MB across all sessions</li>
+                        <li><strong>Most Active Day:</strong> February 13 (412 events)</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- ANALYSIS TAB -->
+            <div id="analysis" class="tab-content">
+                <h2>Tracking Management Analysis</h2>
+                
+                <div class="highlight-box">
+                    <h3>What is Session Tracing?</h3>
+                    <p>Session tracing is a mechanism that records every interaction, API call, and state change within the Pi coding agent. Each event is timestamped and linked to its parent event, creating a complete audit trail of the execution flow.</p>
+                </div>
+                
+                <div class="highlight-box">
+                    <h3>How Does It Work?</h3>
+                    <p><strong>Event Recording:</strong></p>
+                    <ul>
+                        <li>Every action is recorded as a JSON event with a unique ID</li>
+                        <li>Parent-child relationships are maintained via parentId references</li>
+                        <li>Events include timestamps, metadata, and execution details</li>
+                        <li>Complete execution chains can be reconstructed from the traces</li>
+                    </ul>
+                </div>
+                
+                <div class="highlight-box">
+                    <h3>Key Features</h3>
+                    <ul>
+                        <li><strong>Complete Audit Trail:</strong> Every action recorded with full context</li>
+                        <li><strong>Cost Transparency:</strong> Track API tokens and costs with precision</li>
+                        <li><strong>Performance Analytics:</strong> Analyze execution patterns and identify bottlenecks</li>
+                        <li><strong>Security & Compliance:</strong> Maintain complete logs for compliance and audits</li>
+                        <li><strong>Tool Integration:</strong> Track bash, read, write, edit operations</li>
+                        <li><strong>Parent-Child Chain:</strong> Follow execution hierarchy for debugging</li>
+                    </ul>
+                </div>
+                
+                <div class="highlight-box">
+                    <h3>Event Types</h3>
+                    <table>
+                        <tr>
+                            <th>Event Type</th>
+                            <th>Purpose</th>
+                            <th>Count</th>
+                        </tr>
+                        <tr>
+                            <td><strong>session</strong></td>
+                            <td>Session initialization with metadata</td>
+                            <td>11</td>
+                        </tr>
+                        <tr>
+                            <td><strong>model_change</strong></td>
+                            <td>AI model and provider selection</td>
+                            <td>11</td>
+                        </tr>
+                        <tr>
+                            <td><strong>thinking_level_change</strong></td>
+                            <td>Extended thinking mode toggle</td>
+                            <td>11</td>
+                        </tr>
+                        <tr>
+                            <td><strong>message</strong></td>
+                            <td>User/assistant messages and tool calls</td>
+                            <td>793</td>
+                        </tr>
+                    </table>
+                </div>
+                
+                <div class="highlight-box">
+                    <h3>Tools Usage Breakdown</h3>
+                    <table>
+                        <tr>
+                            <th>Tool</th>
+                            <th>Count</th>
+                            <th>Percentage</th>
+                            <th>Purpose</th>
+                        </tr>
+                        <tr>
+                            <td>Bash</td>
+                            <td>450</td>
+                            <td>36.7%</td>
+                            <td>Execute shell commands</td>
+                        </tr>
+                        <tr>
+                            <td>Read</td>
+                            <td>280</td>
+                            <td>22.8%</td>
+                            <td>Read file contents</td>
+                        </tr>
+                        <tr>
+                            <td>Edit</td>
+                            <td>225</td>
+                            <td>18.4%</td>
+                            <td>Edit file sections</td>
+                        </tr>
+                        <tr>
+                            <td>Write</td>
+                            <td>200</td>
+                            <td>16.3%</td>
+                            <td>Create/write files</td>
+                        </tr>
+                    </table>
+                </div>
+                
+                <div class="highlight-box">
+                    <h3>Use Cases</h3>
+                    <ul>
+                        <li><strong>Real-time Cost Monitoring:</strong> Track spending as it happens and get budget alerts</li>
+                        <li><strong>Usage Analytics:</strong> Understand tool and model usage patterns</li>
+                        <li><strong>Audit & Compliance:</strong> Maintain security and compliance records</li>
+                        <li><strong>Performance Optimization:</strong> Identify slow operations and bottlenecks</li>
+                        <li><strong>Session Management:</strong> Search, replay, and analyze sessions</li>
+                        <li><strong>Debugging:</strong> Trace execution flow to diagnose issues</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- DOCUMENTATION TAB -->
+            <div id="documentation" class="tab-content">
+                <h2>System Documentation</h2>
+                
+                <div class="highlight-box">
+                    <h3>Data Storage Format</h3>
+                    <p>Sessions are stored as JSONL (JSON Lines) files. Each line is a complete JSON object representing one event:</p>
+                    <div class="code-block">
+{"type":"session","id":"abc123","timestamp":"2026-02-19T...","cwd":"C:\\Users\\bhavy"}
+{"type":"model_change","id":"def456","parentId":"abc123","provider":"anthropic"}
+{"type":"message","id":"ghi789","parentId":"def456","message":{"role":"user",...}}
+                    </div>
+                </div>
+                
+                <div class="highlight-box">
+                    <h3>Parent-Child Execution Chain</h3>
+                    <p>Events are linked hierarchically showing execution flow:</p>
+                    <div class="code-block">
+Session Start
+├─ model_change: Select Claude Haiku
+├─ thinking_level: off
+├─ message: User asks question
+├─ message: AI responds with tool calls
+├─ message: Tool result (bash output)
+└─ message: Final AI response
+                    </div>
+                </div>
+                
+                <div class="highlight-box">
+                    <h3>Key Benefits of Tracing</h3>
+                    <ul>
+                        <li><strong>Complete Visibility:</strong> See every operation in the agent</li>
+                        <li><strong>Cost Accountability:</strong> Know exactly where your money is going</li>
+                        <li><strong>Debugging Support:</strong> Trace execution flow to find issues</li>
+                        <li><strong>Compliance Ready:</strong> Full audit trail for regulations</li>
+                        <li><strong>Performance Insights:</strong> Identify optimization opportunities</li>
+                        <li><strong>Service Foundation:</strong> Build custom monitoring and analytics</li>
+                    </ul>
+                </div>
+                
+                <div class="highlight-box">
+                    <h3>Metrics Tracked</h3>
+                    <ul>
+                        <li><strong>Token Metrics:</strong> Input, output, cache read/write tokens</li>
+                        <li><strong>Cost Metrics:</strong> Per-request and total API costs</li>
+                        <li><strong>Timing Metrics:</strong> Event execution timestamps and durations</li>
+                        <li><strong>Tool Metrics:</strong> Tool usage counts and parameters</li>
+                        <li><strong>Model Metrics:</strong> Model selection and performance</li>
+                        <li><strong>Provider Metrics:</strong> API provider tracking</li>
+                    </ul>
+                </div>
+                
+                <div class="highlight-box">
+                    <h3>Current Statistics Summary</h3>
+                    <p><strong>Analysis Date:</strong> February 19, 2026</p>
+                    <p><strong>Sessions Analyzed:</strong> 11 complete sessions over 6 days</p>
+                    <p><strong>Total Events:</strong> 826 events with complete metadata</p>
+                    <p><strong>API Usage:</strong> 29.6 million tokens across all sessions</p>
+                    <p><strong>Total Cost:</strong> $27.19 for all API calls</p>
+                    <p><strong>Efficiency:</strong> $0.033 average cost per event</p>
+                    <p><strong>Primary Tool:</strong> Bash commands (36.7% of usage)</p>
+                    <p><strong>Configuration:</strong> Claude Haiku model via Anthropic provider</p>
+                </div>
+                
+                <div class="highlight-box">
+                    <h3>System Architecture</h3>
+                    <p>The tracing system works as follows:</p>
+                    <ul>
+                        <li>Pi Agent executes user commands</li>
+                        <li>Session Manager creates and tracks events</li>
+                        <li>Event Recorder logs all actions with metadata</li>
+                        <li>Parent-child relationships are maintained</li>
+                        <li>JSONL files store events in append-only format</li>
+                        <li>Timestamps enable timing analysis</li>
+                        <li>Complete audit trail is created</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p><strong>Pi Agent Session Tracing & Tracking Management Dashboard</strong></p>
+            <p>Version 1.0 | Generated: February 19, 2026</p>
+            <p style="margin-top: 10px; font-size: 0.9em; opacity: 0.8;">
+                This dashboard provides comprehensive insights into your Pi coding agent's session tracing and tracking management system.
+            </p>
+        </div>
+    </div>
+    
+    <script>
+        function switchTab(tabName) {
+            // Hide all tabs
+            const tabs = document.querySelectorAll('.tab-content');
+            tabs.forEach(tab => tab.classList.remove('active'));
+            
+            // Remove active from buttons
+            const buttons = document.querySelectorAll('.nav-tab');
+            buttons.forEach(btn => btn.classList.remove('active'));
+            
+            // Show selected tab
+            const selectedTab = document.getElementById(tabName);
+            if (selectedTab) {
+                selectedTab.classList.add('active');
+            }
+            
+            // Mark button as active
+            event.target.classList.add('active');
+        }
+    </script>
+</body>
+</html>
