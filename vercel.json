@@ -1,0 +1,12 @@
+{
+  "version": 2,
+  "buildCommand": "echo 'Static deployment'",
+  "outputDirectory": "public",
+  "public": true,
+  "cleanUrls": true,
+  "trailingSlash": false,
+  "framework": "static",
+  "git": {
+    "deploymentEnabled": true
+  }
+}
