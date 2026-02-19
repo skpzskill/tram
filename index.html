@@ -254,6 +254,50 @@
             border-top: 1px solid #ddd;
         }
         
+        .trace-tree {
+            background: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 20px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+        
+        .trace-node {
+            margin: 5px 0;
+            padding-left: 20px;
+        }
+        
+        .trace-node-level-1 { padding-left: 20px; }
+        .trace-node-level-2 { padding-left: 40px; }
+        .trace-node-level-3 { padding-left: 60px; }
+        .trace-node-level-4 { padding-left: 80px; }
+        .trace-node-level-5 { padding-left: 100px; }
+        
+        .trace-icon {
+            display: inline-block;
+            width: 20px;
+            text-align: center;
+            margin-right: 8px;
+        }
+        
+        .event-type {
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-weight: 500;
+            font-size: 0.85em;
+        }
+        
+        .type-message { background: #e3f2fd; color: #1976d2; }
+        .type-session { background: #f3e5f5; color: #7b1fa2; }
+        .type-model { background: #e8f5e9; color: #388e3c; }
+        .type-thinking { background: #fff3e0; color: #f57c00; }
+        .type-tool { background: #fce4ec; color: #c2185b; }
+        .type-other { background: #eceff1; color: #455a64; }
+        
         @media (max-width: 768px) {
             .header h1 { font-size: 1.8em; }
             .stats-grid { grid-template-columns: 1fr; }
@@ -273,6 +317,7 @@
             <button class="nav-tab active" onclick="switchTab('overview')">Overview</button>
             <button class="nav-tab" onclick="switchTab('statistics')">Statistics</button>
             <button class="nav-tab" onclick="switchTab('sessions')">Sessions</button>
+            <button class="nav-tab" onclick="switchTab('tracing')">Tracing</button>
             <button class="nav-tab" onclick="switchTab('analysis')">Analysis</button>
             <button class="nav-tab" onclick="switchTab('documentation')">Documentation</button>
         </div>
@@ -521,6 +566,156 @@
                         <li><strong>Average Events:</strong> 75 events per session</li>
                         <li><strong>Total Size:</strong> ~4.3 MB across all sessions</li>
                         <li><strong>Most Active Day:</strong> February 13 (412 events)</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- TRACING TAB -->
+            <div id="tracing" class="tab-content">
+                <h2>Request Trace Tree</h2>
+                
+                <div class="highlight-box">
+                    <h3>Session Execution Hierarchy</h3>
+                    <p>This section shows the hierarchical trace of events as they occurred in the session, showing parent-child relationships and execution flow.</p>
+                </div>
+                
+                <div class="trace-tree">
+                    <div class="trace-node trace-node-level-1">
+                        <span class="trace-icon">→</span>
+                        <span class="event-type type-session">session</span>
+                        <code style="color: #666;">[e8a0c62b...]</code>
+                        @ <span style="color: #999; font-size: 0.85em;">2026-02-19T14:50:38.901Z</span>
+                    </div>
+                    
+                    <div class="trace-node trace-node-level-2">
+                        <span class="trace-icon">→</span>
+                        <span class="event-type type-model">model_change</span>
+                        <code style="color: #666;">[e1280d74...]</code>
+                        @ <span style="color: #999; font-size: 0.85em;">2026-02-19T14:50:38.921Z</span>
+                        <span style="color: #667eea; font-weight: 500;">anthropic</span>
+                    </div>
+                    
+                    <div class="trace-node trace-node-level-3">
+                        <span class="trace-icon">→</span>
+                        <span class="event-type type-thinking">thinking_level</span>
+                        <code style="color: #666;">[92b92c9c...]</code>
+                        @ <span style="color: #999; font-size: 0.85em;">2026-02-19T14:50:38.921Z</span>
+                        <span style="color: #667eea; font-weight: 500;">off</span>
+                    </div>
+                    
+                    <div class="trace-node trace-node-level-4">
+                        <span class="trace-icon">→</span>
+                        <span class="event-type type-message">message</span>
+                        <code style="color: #666;">[944abb05...]</code>
+                        @ <span style="color: #999; font-size: 0.85em;">2026-02-19T14:53:19.678Z</span>
+                        <span style="color: #667eea; font-weight: 500;">(user)</span>
+                    </div>
+                    
+                    <div class="trace-node trace-node-level-4">
+                        <span class="trace-icon">→</span>
+                        <span class="event-type type-message">message</span>
+                        <code style="color: #666;">[f2f305e0...]</code>
+                        @ <span style="color: #999; font-size: 0.85em;">2026-02-19T14:53:22.418Z</span>
+                        <span style="color: #667eea; font-weight: 500;">(assistant)</span>
+                    </div>
+                    
+                    <div class="trace-node trace-node-level-5">
+                        <span class="trace-icon">→</span>
+                        <span class="event-type type-tool">toolCall</span>
+                        <code style="color: #666;">[bash_001...]</code>
+                        @ <span style="color: #999; font-size: 0.85em;">2026-02-19T14:53:22.420Z</span>
+                        <span style="color: #667eea; font-weight: 500;">bash</span>
+                    </div>
+                    
+                    <div class="trace-node trace-node-level-5">
+                        <span class="trace-icon">→</span>
+                        <span class="event-type type-message">message</span>
+                        <code style="color: #666;">[5efb9a12...]</code>
+                        @ <span style="color: #999; font-size: 0.85em;">2026-02-19T14:53:26.374Z</span>
+                        <span style="color: #667eea; font-weight: 500;">(toolResult)</span>
+                    </div>
+                    
+                    <div class="trace-node trace-node-level-4">
+                        <span class="trace-icon">→</span>
+                        <span class="event-type type-message">message</span>
+                        <code style="color: #666;">[688ed521...]</code>
+                        @ <span style="color: #999; font-size: 0.85em;">2026-02-19T14:53:28.676Z</span>
+                        <span style="color: #667eea; font-weight: 500;">(assistant)</span>
+                    </div>
+                    
+                    <div class="trace-node trace-node-level-4">
+                        <span class="trace-icon">→</span>
+                        <span class="event-type type-message">message</span>
+                        <code style="color: #666;">[e9f2ebaf...]</code>
+                        @ <span style="color: #999; font-size: 0.85em;">2026-02-19T14:53:51.978Z</span>
+                        <span style="color: #667eea; font-weight: 500;">(user)</span>
+                    </div>
+                    
+                    <div class="trace-node trace-node-level-4">
+                        <span class="trace-icon">→</span>
+                        <span class="event-type type-message">message</span>
+                        <code style="color: #666;">[92be2c9f...]</code>
+                        @ <span style="color: #999; font-size: 0.85em;">2026-02-19T14:53:53.040Z</span>
+                        <span style="color: #667eea; font-weight: 500;">(assistant)</span>
+                    </div>
+                </div>
+                
+                <div class="chart-container" style="margin-top: 30px;">
+                    <div class="chart-title">Event Type Colors</div>
+                    <table>
+                        <tr>
+                            <th style="width: 30%;">Event Type</th>
+                            <th style="width: 50%;">Description</th>
+                            <th>Color</th>
+                        </tr>
+                        <tr>
+                            <td><span class="event-type type-session">session</span></td>
+                            <td>Session initialization event</td>
+                            <td>Purple</td>
+                        </tr>
+                        <tr>
+                            <td><span class="event-type type-model">model_change</span></td>
+                            <td>AI model selection event</td>
+                            <td>Green</td>
+                        </tr>
+                        <tr>
+                            <td><span class="event-type type-thinking">thinking</span></td>
+                            <td>Thinking mode toggle event</td>
+                            <td>Orange</td>
+                        </tr>
+                        <tr>
+                            <td><span class="event-type type-message">message</span></td>
+                            <td>User/assistant message event</td>
+                            <td>Blue</td>
+                        </tr>
+                        <tr>
+                            <td><span class="event-type type-tool">toolCall</span></td>
+                            <td>Tool execution event</td>
+                            <td>Pink</td>
+                        </tr>
+                    </table>
+                </div>
+                
+                <div class="highlight-box" style="margin-top: 30px;">
+                    <h3>Understanding the Trace Tree</h3>
+                    <ul>
+                        <li><strong>Indentation Levels:</strong> Shows parent-child relationships. More indentation = deeper in the execution chain</li>
+                        <li><strong>Event ID:</strong> Unique identifier for each event (shown as [abc123...])</li>
+                        <li><strong>Timestamp:</strong> When the event occurred in ISO 8601 format</li>
+                        <li><strong>Event Details:</strong> Additional info like user/assistant role or tool name</li>
+                        <li><strong>Colors:</strong> Different event types are color-coded for easy identification</li>
+                    </ul>
+                </div>
+                
+                <div class="highlight-box">
+                    <h3>How to Read the Trace</h3>
+                    <ul>
+                        <li>Start at the root <code>session</code> event</li>
+                        <li>Follow the indented events downward to see execution flow</li>
+                        <li>Each event references its parent through the parent-child relationship</li>
+                        <li>Tool calls are shown with their execution results immediately after</li>
+                        <li>Timestamps show the exact order of events</li>
+                        <li>The deeper the nesting, the more specific the operation</li>
                     </ul>
                 </div>
             </div>
